@@ -1,0 +1,18 @@
+{
+  "fusion_model": "ResNet-18 + VGG-16",
+  "fusion_strategies": {
+    "average": 89.88888888888889,
+    "weighted": 90.55555555555556,
+    "max_voting": 91.22222222222223
+  },
+  "best_fusion_strategy": "ResNet-18 (Alone)",
+  "best_fusion_accuracy": 91.22222222222223,
+  "individual_models": {
+    "resnet18": 91.22222222222223,
+    "vgg16": 81.88888888888889
+  },
+  "improvement": {
+    "over_resnet18": 0.0,
+    "over_vgg16": 9.333333333333343
+  }
+}

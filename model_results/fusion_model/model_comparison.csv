@@ -1,0 +1,6 @@
+Model,Test Accuracy (%)
+ResNet-18 (Alone),91.22222222222223
+Fusion: Max Voting,91.22222222222223
+Fusion: Weighted,90.55555555555556
+Fusion: Average,89.88888888888889
+VGG-16 (Alone),81.88888888888889

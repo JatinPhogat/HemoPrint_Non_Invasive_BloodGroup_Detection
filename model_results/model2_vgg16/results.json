@@ -3,8 +3,8 @@
   "epochs": 30,
   "learning_rate": 0.0001,
   "batch_size": 32,
-  "best_val_acc": 42.0,
-  "test_acc": 42.888888888888886,
+  "best_val_acc": 83.55555555555556,
+  "test_acc": 81.88888888888889,
   "total_params": 134293320,
-  "trainable_params": 32776
+  "trainable_params": 119578632
 }
