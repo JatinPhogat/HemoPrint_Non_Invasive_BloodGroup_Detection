@@ -1,0 +1,10 @@
+{
+  "model": "VGG-16",
+  "epochs": 30,
+  "learning_rate": 0.0001,
+  "batch_size": 32,
+  "best_val_acc": 42.0,
+  "test_acc": 42.888888888888886,
+  "total_params": 134293320,
+  "trainable_params": 32776
+}
