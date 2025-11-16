@@ -3,10 +3,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms, models
-from PIL import Image
+from PIL import Image, ImageEnhance
 import json
 from pathlib import Path
 import numpy as np
+import cv2
 
 # Page config
 st.set_page_config(
@@ -55,7 +56,62 @@ def load_models():
     return model1, model2
 
 # Image preprocessing
-def preprocess_image(image):
+def preprocess_image(image, enhance_for_phone=False):
+    """
+    Preprocess image for model input
+    enhance_for_phone: Apply aggressive preprocessing for phone photos (JPG/JPEG) to match BMP training data quality
+    """
+    if enhance_for_phone:
+        # Convert PIL to numpy for OpenCV processing
+        img_np = np.array(image)
+        
+        # Convert RGB to BGR for OpenCV
+        img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+        
+        # Convert to grayscale (fingerprints are grayscale features)
+        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+        
+        # Step 1: Remove JPEG compression artifacts with bilateral filter
+        denoised = cv2.bilateralFilter(gray, 9, 75, 75)
+        
+        # Step 2: Aggressive CLAHE for ridge enhancement (models trained on high-contrast BMP)
+        clahe = cv2.createCLAHE(clipLimit=3.5, tileGridSize=(8, 8))
+        enhanced = clahe.apply(denoised)
+        
+        # Step 3: Morphological operations to enhance ridge structure
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        morph = cv2.morphologyEx(enhanced, cv2.MORPH_CLOSE, kernel)
+        
+        # Step 4: Strong unsharp masking for ridge clarity
+        gaussian = cv2.GaussianBlur(morph, (0, 0), 2.0)
+        sharpened = cv2.addWeighted(morph, 2.5, gaussian, -1.5, 0)
+        
+        # Step 5: Enhance edges (ridge patterns)
+        sobelx = cv2.Sobel(sharpened, cv2.CV_64F, 1, 0, ksize=3)
+        sobely = cv2.Sobel(sharpened, cv2.CV_64F, 0, 1, ksize=3)
+        sobel = np.sqrt(sobelx**2 + sobely**2)
+        sobel = np.uint8(sobel / sobel.max() * 255)
+        
+        # Combine original with edge-enhanced
+        combined = cv2.addWeighted(sharpened, 0.7, sobel, 0.3, 0)
+        
+        # Step 6: Histogram matching to simulate BMP-like distribution
+        combined = cv2.equalizeHist(combined)
+        
+        # Step 7: Final noise reduction while preserving ridges
+        final = cv2.fastNlMeansDenoising(combined, None, h=10, templateWindowSize=7, searchWindowSize=21)
+        
+        # Convert back to RGB (3 channels) for model input
+        img_rgb = cv2.cvtColor(final, cv2.COLOR_GRAY2RGB)
+        
+        # Convert back to PIL
+        image = Image.fromarray(img_rgb)
+    else:
+        # Apply basic contrast enhancement for regular images
+        enhancer = ImageEnhance.Contrast(image)
+        image = enhancer.enhance(1.2)
+    
+    # Standard transforms
     transform = transforms.Compose([
         transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
         transforms.ToTensor(),
@@ -64,9 +120,9 @@ def preprocess_image(image):
     return transform(image).unsqueeze(0)
 
 # Prediction function
-def predict(image, model1, model2, use_fusion=True):
+def predict(image, model1, model2, use_fusion=True, enhance_for_phone=False):
     # Preprocess
-    img_tensor = preprocess_image(image).to(device)
+    img_tensor = preprocess_image(image, enhance_for_phone).to(device)
     
     with torch.no_grad():
         # Get predictions from both models
@@ -105,6 +161,8 @@ st.write("Upload a fingerprint image to detect the blood group using AI")
 st.sidebar.header("Settings")
 use_fusion = st.sidebar.checkbox("Use Fusion Model", value=True, 
                                   help="Combines ResNet-18 + VGG-16 for better accuracy")
+enhance_phone = st.sidebar.checkbox("📱 Phone Photo Mode", value=False,
+                                    help="Enable for photos taken with phone camera (JPG/JPEG). Applies extra preprocessing: contrast enhancement, denoising, and sharpening.")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("About")
@@ -132,7 +190,7 @@ if uploaded_file is not None:
     
     with col1:
         st.subheader("Uploaded Image")
-        st.image(image, use_container_width=True)
+        st.image(image, width=350)
     
     with col2:
         st.subheader("Prediction")
@@ -140,7 +198,7 @@ if uploaded_file is not None:
         # Make prediction
         with st.spinner("Analyzing fingerprint..."):
             predicted_class, confidence, all_probs, model_name = predict(
-                image, model1, model2, use_fusion
+                image, model1, model2, use_fusion, enhance_phone
             )
         
         # Display results
@@ -153,7 +211,7 @@ if uploaded_file is not None:
         st.markdown(f"**Confidence:** {confidence:.2f}%")
         
         # Progress bar for confidence
-        st.progress(confidence / 100)
+        st.progress(float(confidence / 100))
         
         # Show all probabilities (always show)
         st.markdown("---")
@@ -169,7 +227,7 @@ if uploaded_file is not None:
                 st.markdown(f"**{blood_group}:** {prob:.2f}% ⭐")
             else:
                 st.markdown(f"{blood_group}: {prob:.2f}%")
-            st.progress(prob / 100)
+            st.progress(float(prob / 100))
 
 # Footer
 st.markdown("---")

@@ -1,13 +1,3 @@
-# Model weights (too large for GitHub)
-*.pth
-*.pt
-*.h5
-*.weights
-
-# Model results folder - keep structure but ignore large files
-model_results/*/best_model.pth
-model_results/*/model.pth
-
 # Python
 __pycache__/
 *.py[cod]

@@ -1,0 +1,27 @@
+{
+  "technique": "Grad-CAM (Gradient-weighted Class Activation Mapping)",
+  "models_analyzed": [
+    "ResNet-18",
+    "VGG-16"
+  ],
+  "fingerprint_features_extracted": [
+    "Ridge patterns",
+    "Edge detection",
+    "Ridge orientation (Gabor)",
+    "Minutiae points"
+  ],
+  "key_findings": [
+    "Models focus on specific ridge patterns",
+    "Different architectures learn complementary features",
+    "Attention maps align with biological fingerprint features",
+    "Fusion works because models focus on different regions"
+  ],
+  "visualizations_generated": [
+    "fingerprint_features.png",
+    "gradcam_resnet_example.png",
+    "gradcam_vgg_example.png",
+    "model_comparison_gradcam.png",
+    "multiple_samples_gradcam.png",
+    "feature_importance_heatmap.png"
+  ]
+}
