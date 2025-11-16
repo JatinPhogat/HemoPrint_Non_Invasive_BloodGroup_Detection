@@ -1,0 +1,10 @@
+{
+  "model": "ResNet-18",
+  "epochs": 30,
+  "learning_rate": 0.001,
+  "batch_size": 32,
+  "best_val_acc": 91.88888888888889,
+  "test_acc": 91.22222222222223,
+  "total_params": 11180616,
+  "trainable_params": 11180616
+}

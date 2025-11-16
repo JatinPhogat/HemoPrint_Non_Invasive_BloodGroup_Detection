@@ -1,0 +1,19 @@
+{
+    "image_size": 224,
+    "batch_size": 32,
+    "num_classes": 8,
+    "class_names": [
+        "A+",
+        "A-",
+        "AB+",
+        "AB-",
+        "B+",
+        "B-",
+        "O+",
+        "O-"
+    ],
+    "train_size": 4199,
+    "val_size": 900,
+    "test_size": 901,
+    "device": "cuda"
+}
